@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora de Taxas de Leilão</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .auction-type-section {
+            background: #3498db;
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .auction-type-section h3 {
+            margin-top: 0;
+        }
+        .auction-selector {
+            display: flex;
+            gap: 15px;
+            margin-top: 10px;
+        }
+        .auction-option {
+            flex: 1;
+            padding: 15px;
+            background: white;
+            color: #2c3e50;
+            border: 3px solid transparent;
+            border-radius: 8px;
+            cursor: pointer;
+            text-align: center;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+        .auction-option:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        .auction-option.selected {
+            border-color: #27ae60;
+            background: #d4edda;
+        }
+        .input-section {
+            background: #ecf0f1;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .input-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #34495e;
+        }
+        input[type="number"] {
+            width: 200px;
+            padding: 10px;
+            border: 2px solid #bdc3c7;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        input[type="number"]:focus {
+            border-color: #3498db;
+            outline: none;
+        }
+        input[type="radio"] {
+            margin-right: 5px;
+        }
+        .results {
+            background: #e8f5e8;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+        .result-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            padding: 8px 0;
+            border-bottom: 1px solid #d5d5d5;
+        }
+        .result-item:last-child {
+            border-bottom: none;
+            font-weight: bold;
+            font-size: 18px;
+            background: #d4edda;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 15px;
+        }
+        .table-container {
+            overflow-x: auto;
+            margin-top: 30px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            font-size: 14px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: center;
+        }
+        th {
+            background-color: #3498db;
+            color: white;
+        }
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+        .currency {
+            color: #27ae60;
+            font-weight: bold;
+        }
+        .recommended-bid-box {
+            background: #fff3cd;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 15px;
+        }
+        .recommended-bid-box h4 {
+            margin: 0 0 10px 0;
+            color: #856404;
+        }
+        .recommended-bid-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #27ae60;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔨 Calculadora de Taxas de Leilão</h1>
+        
+        <!-- Auction Type Selection -->
+        <div class="auction-type-section">
+            <h3>🏷️ Tipo de Leilão:</h3>
+            <div class="auction-selector">
+                <div class="auction-option selected" onclick="selectAuctionType('standard')" id="standardOption">
+                    <div style="font-size: 20px;">🏛️</div>
+                    <div>Leilão Padrão</div>
+                </div>
+                <div class="auction-option" onclick="selectAuctionType('police')" id="policeOption">
+                    <div style="font-size: 20px;">🚔</div>
+                    <div>Police Auction</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="input-section">
+            <h3>🎯 Modo de Cálculo:</h3>
+            <div style="margin-bottom: 20px;">
+                <input type="radio" id="modeForward" name="calculationMode" value="forward" checked>
+                <label for="modeForward" style="display: inline; margin-left: 5px; font-weight: normal;">Calcular total a partir do lance</label>
+                <br>
+                <input type="radio" id="modeReverse" name="calculationMode" value="reverse">
+                <label for="modeReverse" style="display: inline; margin-left: 5px; font-weight: normal;">Calcular lance necessário para atingir total desejado</label>
+            </div>
+            
+            <div id="forwardMode">
+                <div class="input-group">
+                    <label for="hammerPrice">💰 Valor do Lance (Hammer Price) - £:</label>
+                    <input type="number" id="hammerPrice" step="0.01" min="0" placeholder="0.00">
+                </div>
+                
+                <div class="input-group" id="extraFeeGroup">
+                    <label for="extraFee">➕ Taxa Extra do Lote - £:</label>
+                    <input type="number" id="extraFee" step="0.01" min="0" placeholder="0.00">
+                    <small style="color: #7f8c8d; margin-left: 10px;">*Será automaticamente acrescido 20% de VAT</small>
+                </div>
+            </div>
+            
+            <div id="reverseMode" style="display: none;">
+                <div class="input-group">
+                    <label for="targetTotal">🎯 Total Desejado - £:</label>
+                    <input type="number" id="targetTotal" step="0.01" min="0" placeholder="0.00">
+                </div>
+                
+                <div class="input-group" id="extraFeeReverseGroup">
+                    <label for="extraFeeReverse">➕ Taxa Extra do Lote - £:</label>
+                    <input type="number" id="extraFeeReverse" step="0.01" min="0" placeholder="0.00">
+                    <small style="color: #7f8c8d; margin-left: 10px;">*Será automaticamente acrescido 20% de VAT</small>
+                </div>
+                
+                <div class="recommended-bid-box">
+                    <h4>🔍 Lance Recomendado:</h4>
+                    <div class="recommended-bid-value" id="recommendedBid">£0.00</div>
+                    <small style="color: #6c757d;">Lance máximo para não exceder o total desejado</small>
+                </div>
+            </div>
+        </div>
+
+        <div class="results">
+            <h3>📊 Resumo dos Custos:</h3>
+            <div class="result-item">
+                <span>Valor do Lance:</span>
+                <span class="currency" id="displayHammer">£0.00</span>
+            </div>
+            <div class="result-item">
+                <span>Buyer's Fee:</span>
+                <span class="currency" id="displayBuyerFee">£0.00</span>
+            </div>
+            <div class="result-item" id="buyerVATRow">
+                <span>VAT sobre Buyer's Fee (20%):</span>
+                <span class="currency" id="displayBuyerVAT">£0.00</span>
+            </div>
+            <div class="result-item" id="extraFeeRow">
+                <span>Taxa Extra do Lote:</span>
+                <span class="currency" id="displayExtraFee">£0.00</span>
+            </div>
+            <div class="result-item" id="extraVATRow">
+                <span>VAT sobre Taxa Extra (20%):</span>
+                <span class="currency" id="displayExtraVAT">£0.00</span>
+            </div>
+            <div class="result-item" id="fixedFeeRow">
+                <span>Taxa Fixa (£35 + 20% VAT):</span>
+                <span class="currency" id="displayFixedFee">£42.00</span>
+            </div>
+            <div class="result-item">
+                <span>💰 TOTAL A PAGAR:</span>
+                <span class="currency" id="displayTotal">£0.00</span>
+            </div>
+        </div>
+
+        <div class="table-container" id="standardTable">
+            <h3>📋 Tabela de Taxas - Leilão Padrão</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Hammer Price (£)</th>
+                        <th>Buyer's Fee (£)</th>
+                        <th>+ 20% VAT (£)</th>
+                        <th>Total com VAT (£)</th>
+                    </tr>
+                </thead>
+                <tbody id="feeTableStandard"></tbody>
+            </table>
+        </div>
+
+        <div class="table-container" id="policeTable" style="display: none;">
+            <h3>📋 Tabela de Taxas - Police Auction</h3>
+            <p style="color: #e74c3c; font-weight: bold;">*Ex VAT. Todas as outras taxas (site e admin) ainda se aplicam.</p>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Sale/Hammer Price (£)</th>
+                        <th>Buyer Fee (£)</th>
+                    </tr>
+                </thead>
+                <tbody id="feeTablePolice"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        let currentAuctionType = 'standard';
+
+        // Standard auction fee data
+        const standardFeeData = [
+            {min: 0, max: 99.99, buyerFee: 43.00},
+            {min: 100, max: 199.99, buyerFee: 85.00},
+            {min: 200, max: 299.99, buyerFee: 93.00},
+            {min: 300, max: 399.99, buyerFee: 107.00},
+            {min: 400, max: 499.99, buyerFee: 120.00},
+            {min: 500, max: 699.99, buyerFee: 143.00},
+            {min: 700, max: 899.99, buyerFee: 158.00},
+            {min: 900, max: 1099.99, buyerFee: 167.00},
+            {min: 1100, max: 1299.99, buyerFee: 179.00},
+            {min: 1300, max: 1499.99, buyerFee: 194.00},
+            {min: 1500, max: 1699.99, buyerFee: 214.00},
+            {min: 1700, max: 2499.99, buyerFee: 253.00},
+            {min: 2500, max: 2999.99, buyerFee: 319.00},
+            {min: 3000, max: 3499.99, buyerFee: 389.00},
+            {min: 3500, max: 3999.99, buyerFee: 393.00},
+            {min: 4000, max: 4499.99, buyerFee: 419.00},
+            {min: 4500, max: 4999.99, buyerFee: 479.00},
+            {min: 5000, max: 5499.99, buyerFee: 509.00},
+            {min: 5500, max: 5999.99, buyerFee: 509.00},
+            {min: 6000, max: 6499.99, buyerFee: 528.00},
+            {min: 6500, max: 6999.99, buyerFee: 528.00},
+            {min: 7000, max: 9499.99, buyerFee: 539.00},
+            {min: 9500, max: 11999.99, buyerFee: 540.00}
+        ];
+
+        // Police auction fee data
+        const policeFeeData = [
+            {min: 0, max: 249.99, buyerFee: 33.00},
+            {min: 250, max: 499.99, buyerFee: 56.00},
+            {min: 500, max: 749.99, buyerFee: 111.00},
+            {min: 750, max: 999.99, buyerFee: 133.00},
+            {min: 1000, max: 1499.99, buyerFee: 178.00},
+            {min: 1500, max: 1999.99, buyerFee: 233.00},
+            {min: 2000, max: 2499.99, buyerFee: 289.00},
+            {min: 2500, max: 2999.99, buyerFee: 355.00},
+            {min: 3000, max: 3999.99, buyerFee: 433.00},
+            {min: 4000, max: 4999.99, buyerFee: 512.00},
+            {min: 5000, max: 7499.99, buyerFee: 588.00},
+            {min: 7500, max: 9999.99, buyerFee: 611.00},
+            {min: 10000, max: 12499.99, buyerFee: 755.00},
+            {min: 12500, max: 14999.99, buyerFee: 880.00}
+        ];
+
+        function formatCurrency(value) {
+            return '£' + value.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,');
+        }
+
+        function selectAuctionType(type) {
+            currentAuctionType = type;
+            
+            document.getElementById('standardOption').classList.remove('selected');
+            document.getElementById('policeOption').classList.remove('selected');
+            
+            if (type === 'standard') {
+                document.getElementById('standardOption').classList.add('selected');
+                document.getElementById('standardTable').style.display = 'block';
+                document.getElementById('policeTable').style.display = 'none';
+                document.getElementById('extraFeeGroup').style.display = 'block';
+                document.getElementById('extraFeeReverseGroup').style.display = 'block';
+                document.getElementById('extraFeeRow').style.display = 'flex';
+                document.getElementById('extraVATRow').style.display = 'flex';
+                document.getElementById('fixedFeeRow').style.display = 'flex';
+                document.getElementById('buyerVATRow').style.display = 'flex';
+            } else {
+                document.getElementById('policeOption').classList.add('selected');
+                document.getElementById('standardTable').style.display = 'none';
+                document.getElementById('policeTable').style.display = 'block';
+                document.getElementById('extraFeeGroup').style.display = 'block';
+                document.getElementById('extraFeeReverseGroup').style.display = 'block';
+                document.getElementById('extraFeeRow').style.display = 'flex';
+                document.getElementById('extraVATRow').style.display = 'flex';
+                document.getElementById('fixedFeeRow').style.display = 'none';
+                document.getElementById('buyerVATRow').style.display = 'none';
+            }
+            
+            const mode = document.querySelector('input[name="calculationMode"]:checked').value;
+            if (mode === 'forward') {
+                calculateTotal();
+            } else {
+                calculateReverseBid();
+            }
+        }
+
+        function getBuyerFee(hammerPrice) {
+            const data = currentAuctionType === 'standard' ? standardFeeData : policeFeeData;
+            
+            if (currentAuctionType === 'standard' && hammerPrice >= 12000) {
+                return hammerPrice * 0.06;
+            }
+            
+            if (currentAuctionType === 'police' && hammerPrice >= 15000) {
+                return hammerPrice * 0.06;
+            }
+            
+            for (let tier of data) {
+                if (hammerPrice >= tier.min && hammerPrice <= tier.max) {
+                    return tier.buyerFee;
+                }
+            }
+            return 0;
+        }
+
+        function calculateTotal() {
+            const hammerPrice = parseFloat(document.getElementById('hammerPrice').value) || 0;
+            const buyerFee = getBuyerFee(hammerPrice);
+            
+            let extraFee = 0;
+            let extraVAT = 0;
+            let buyerVAT = 0;
+            let fixedFee = 0;
+            let total = 0;
+            
+            if (currentAuctionType === 'standard') {
+                extraFee = parseFloat(document.getElementById('extraFee').value) || 0;
+                buyerVAT = buyerFee * 0.20;
+                extraVAT = extraFee * 0.20;
+                fixedFee = 42.00;
+                total = hammerPrice + buyerFee + buyerVAT + extraFee + extraVAT + fixedFee;
+            } else {
+                // Police auction: fees are Ex VAT, but extra fees still get VAT
+                extraFee = parseFloat(document.getElementById('extraFee').value) || 0;
+                extraVAT = extraFee * 0.20;
+                total = hammerPrice + buyerFee + extraFee + extraVAT;
+            }
+            
+            document.getElementById('displayHammer').textContent = formatCurrency(hammerPrice);
+            document.getElementById('displayBuyerFee').textContent = formatCurrency(buyerFee);
+            document.getElementById('displayBuyerVAT').textContent = formatCurrency(buyerVAT);
+            document.getElementById('displayExtraFee').textContent = formatCurrency(extraFee);
+            document.getElementById('displayExtraVAT').textContent = formatCurrency(extraVAT);
+            document.getElementById('displayFixedFee').textContent = formatCurrency(fixedFee);
+            document.getElementById('displayTotal').textContent = formatCurrency(total);
+        }
+
+        function calculateReverseBid() {
+            const targetTotal = parseFloat(document.getElementById('targetTotal').value) || 0;
+            
+            if (targetTotal <= 0) {
+                document.getElementById('recommendedBid').textContent = '£0.00';
+                calculateTotal();
+                return;
+            }
+            
+            let bestBid = 0;
+            
+            if (currentAuctionType === 'standard') {
+                const extraFee = parseFloat(document.getElementById('extraFeeReverse').value) || 0;
+                const extraVAT = extraFee * 0.20;
+                const fixedFee = 42.00;
+                const remainingForBidAndFees = targetTotal - extraFee - extraVAT - fixedFee;
+                
+                if (remainingForBidAndFees <= 0) {
+                    document.getElementById('recommendedBid').textContent = '£0.00';
+                    return;
+                }
+                
+                for (let bid = 0.01; bid <= remainingForBidAndFees; bid += 0.01) {
+                    const buyerFee = getBuyerFee(bid);
+                    const buyerVAT = buyerFee * 0.20;
+                    const totalCost = bid + buyerFee + buyerVAT + extraFee + extraVAT + fixedFee;
+                    
+                    if (totalCost <= targetTotal) {
+                        bestBid = bid;
+                    } else {
+                        break;
+                    }
+                }
+            } else {
+                // Police auction
+                const extraFee = parseFloat(document.getElementById('extraFeeReverse').value) || 0;
+                const extraVAT = extraFee * 0.20;
+                const remainingForBidAndFees = targetTotal - extraFee - extraVAT;
+                
+                if (remainingForBidAndFees <= 0) {
+                    document.getElementById('recommendedBid').textContent = '£0.00';
+                    return;
+                }
+                
+                for (let bid = 0.01; bid <= remainingForBidAndFees; bid += 0.01) {
+                    const buyerFee = getBuyerFee(bid);
+                    const totalCost = bid + buyerFee + extraFee + extraVAT;
+                    
+                    if (totalCost <= targetTotal) {
+                        bestBid = bid;
+                    } else {
+                        break;
+                    }
+                }
+            }
+            
+            document.getElementById('recommendedBid').textContent = formatCurrency(bestBid);
+            
+            // Update display
+            document.getElementById('hammerPrice').value = bestBid.toFixed(2);
+            if (currentAuctionType === 'standard') {
+                document.getElementById('extraFee').value = document.getElementById('extraFeeReverse').value;
+            }
+            calculateTotal();
+        }
+
+        function switchMode() {
+            const mode = document.querySelector('input[name="calculationMode"]:checked').value;
+            const forwardMode = document.getElementById('forwardMode');
+            const reverseMode = document.getElementById('reverseMode');
+            
+            if (mode === 'forward') {
+                forwardMode.style.display = 'block';
+                reverseMode.style.display = 'none';
+                calculateTotal();
+            } else {
+                forwardMode.style.display = 'none';
+                reverseMode.style.display = 'block';
+                calculateReverseBid();
+            }
+        }
+
+        function populateTables() {
+            // Populate standard table
+            const standardTableBody = document.getElementById('feeTableStandard');
+            standardFeeData.forEach(tier => {
+                const row = standardTableBody.insertRow();
+                const vat = tier.buyerFee * 0.20;
+                const totalWithVAT = tier.buyerFee + vat;
+                
+                row.innerHTML = `
+                    <td>£${tier.min.toFixed(2)} – £${tier.max.toFixed(2)}</td>
+                    <td>£${tier.buyerFee.toFixed(2)}</td>
+                    <td>£${vat.toFixed(2)}</td>
+                    <td>£${totalWithVAT.toFixed(2)}</td>
+                `;
+            });
+            
+            const standardRow = standardTableBody.insertRow();
+            standardRow.innerHTML = `
+                <td>£12,000.00 +</td>
+                <td>6.00%</td>
+                <td>+20%</td>
+                <td>Total = 7.2% do lance final</td>
+            `;
+            
+            // Populate police table
+            const policeTableBody = document.getElementById('feeTablePolice');
+            policeFeeData.forEach(tier => {
+                const row = policeTableBody.insertRow();
+                row.innerHTML = `
+                    <td>£${tier.min.toFixed(2)} – £${tier.max.toFixed(2)}</td>
+                    <td>£${tier.buyerFee.toFixed(2)}</td>
+                `;
+            });
+            
+            const policeRow = policeTableBody.insertRow();
+            policeRow.innerHTML = `
+                <td>£15,000.00 – £1,000,000.00</td>
+                <td>6.00%</td>
+            `;
+        }
+
+        // Event listeners
+        document.getElementById('hammerPrice').addEventListener('input', calculateTotal);
+        document.getElementById('extraFee').addEventListener('input', calculateTotal);
+        document.getElementById('targetTotal').addEventListener('input', calculateReverseBid);
+        document.getElementById('extraFeeReverse').addEventListener('input', calculateReverseBid);
+        document.querySelectorAll('input[name="calculationMode"]').forEach(radio => {
+            radio.addEventListener('change', switchMode);
+        });
+
+        // Initialize
+        populateTables();
+        calculateTotal();
+    </script>
+</body>
+</html>
