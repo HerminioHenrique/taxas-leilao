@@ -8,7 +8,7 @@
 
 ### Sobre o Projeto
 
-Uma calculadora web de **arquivo único** criada para calcular automaticamente o custo total de arrematação de veículos nos leilões da **ASM** no Reino Unido. 
+Uma calculadora web de **arquivo único** criada com o auxílio do **Google AI Studio** para calcular automaticamente o custo total de arrematação de veículos nos leilões da **ASM (Autorité des Marchés Financiers)** no Reino Unido. 
 
 O site da ASM não oferece nenhuma ferramenta de cálculo integrada, tornando necessário somar manualmente o lance, a Buyer's Fee, o VAT e as taxas extras durante um leilão ao vivo — o que consome tempo e aumenta o risco de erros. Esta calculadora foi feita para resolver exatamente esse problema, permitindo obter o **custo total final em segundos**.
 
@@ -126,7 +126,7 @@ As tabelas de taxas foram baseadas nas estruturas de cobrança da ASM em vigor n
 
 ### About the Project
 
-A single-file web **calculator** built to automatically compute the total cost of buying vehicles at **ASM auctions** in the United Kingdom.
+A single-file web **calculator** built with the assistance of **Google AI Studio** to automatically compute the total cost of buying vehicles at **ASM auctions** in the United Kingdom.
 
 The ASM website offers no built-in fee calculation tool, making it necessary to manually add up the hammer price, Buyer's Fee, VAT, and any extra lot fees during a live auction — which is time-consuming and error-prone. This calculator was built to solve exactly that problem, giving you the **full final cost in seconds**.
 
